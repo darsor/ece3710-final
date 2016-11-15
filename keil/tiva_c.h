@@ -45,6 +45,11 @@ extern uint32_t* I2C_1;
 extern uint32_t* I2C_2;
 extern uint32_t* I2C_3;
 
+extern uint32_t I2C_100k;
+extern uint32_t I2C_400k;
+extern uint32_t I2C_1000k;
+extern uint32_t I2C_HIGHSPEED;
+
 extern uint32_t* TIMER32_0;
 extern uint32_t* TIMER32_1;
 extern uint32_t* TIMER32_2;
@@ -104,9 +109,9 @@ void timer_timeout_int_en(uint32_t* timer);
 void timer_timeout_int_clr(uint32_t* timer);
 uint8_t timer_expired(uint32_t* timer);
 
-void i2c_init(uint32_t* i2c);
+void i2c_init(uint32_t* i2c, uint32_t sys_clock, uint8_t speed);
 uint8_t i2c_is_busy(uint32_t* i2c);
-void i2c_write(uint32_t* i2c, uint8_t address, uint8_t* data, uint8_t size);
+void i2c_write(uint32_t* i2c, uint8_t address, uint8_t* data, uint8_t size, uint8_t HS);
 
 uint32_t* bitband(uint32_t* address, uint8_t bit);
 void msleep(uint32_t milliseconds);
