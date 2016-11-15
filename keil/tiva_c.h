@@ -14,7 +14,7 @@ extern uint8_t CLK_PLL_OFF;
 extern uint32_t* GPIO_A; 
 extern uint32_t* GPIO_B;
 extern uint32_t* GPIO_C;
-extern uint32_t* GPIO_D; 
+extern uint32_t* GPIO_D;
 extern uint32_t* GPIO_E; 
 extern uint32_t* GPIO_F;
 
@@ -73,6 +73,12 @@ extern uint8_t SPI_ACTIVE_HIGH;
 extern uint8_t SPI_CLK_FIRST;
 extern uint8_t SPI_CLK_SECOND;
 
+extern uint32_t* PWM_BASE;
+extern uint32_t* PWM0;
+extern uint32_t* PWM1;
+extern uint32_t* PWM2;
+extern uint32_t* PWM3;
+
 void sys_clock(uint8_t src, uint8_t pll, uint8_t sysdiv);
 
 void nvic_int_en(uint8_t interrupt);
@@ -125,5 +131,9 @@ uint8_t spi_rx_is_empty(uint32_t* spi);
 uint8_t spi_tx_is_full(uint32_t* spi);
 void spi_rw(uint32_t* spi, uint8_t* data, uint8_t size);
 void spi_r(uint32_t* spi, uint8_t* data, uint8_t size);
+
+void pwm_init(uint32_t* pwm, uint32_t clk_speed, uint16_t freq);
+void pwm_set_freq(uint32_t* pwm, uint32_t clk_speed, uint16_t freq);
+void pwm_set_duty(uint32_t* pwm, float duty);
 
 #endif
