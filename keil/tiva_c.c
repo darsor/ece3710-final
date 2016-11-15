@@ -599,6 +599,7 @@ void pwm_init(uint32_t* pwm, uint32_t clk_speed, uint16_t freq) {
 	
 	gpio_clock(gpio_port);
 	gpio_afsel(gpio_port, gpio_pins, 1);
+	gpio_den(gpio_port, gpio_pins, 1);
 	
 	if (gpio_pins == 0x10) {	// select PWM function on pins
 		gpio_port[0x52C/4] = (gpio_port[0x52C/4] & 0xFFF0FFFF) | 0x00040000;
@@ -606,18 +607,20 @@ void pwm_init(uint32_t* pwm, uint32_t clk_speed, uint16_t freq) {
 		gpio_port[0x52C/4] = (gpio_port[0x52C/4] & 0xF0FFFFFF) | 0x04000000;
 	}
 	
+	SYS_CTL[0x060/4] = (SYS_CTL[0x060/4] & 0xFFE1FFFF) | 0x00120000;	// divide sys_clock by 4
+	
 	pwm[0x000/4] = 0x00000000;	// turn PWM off
 	pwm[0x020/4] = 0x000000C2;	// pwm A turns on when cmp. A down and off when 0 
 	pwm[0x024/4] = 0x00000000;	// disable pwm B output
-	pwm[0x010/4] = clk_speed / freq - 1;	// set frequency
-	pwm[0x018/4] = 1;						// duty cycle default to 0%
+	pwm[0x010/4] = (clk_speed >> 2) / freq - 1;	// set frequency
+	pwm[0x018/4] = 0;						// duty cycle default to 0%
 	pwm[0x000/4] = 0x00000001;	// start PWM timers
 	PWM_BASE[0x008/4] |= enable_bit; // route PWM to pin
 }
 
 void pwm_set_freq(uint32_t* pwm, uint32_t clk_speed, uint16_t freq) {
 	float duty = pwm[0x018/4] / (float) pwm[0x010/4];	// duty cycle
-	pwm[0x010/4] = clk_speed / freq - 1;				// new frequency
+	pwm[0x010/4] = (clk_speed >> 2) / freq - 1;				// new frequency
 	pwm[0x018/4] = pwm[0x010/4] * duty;					// new cmpA value, preserving duty cycle
 }
 
