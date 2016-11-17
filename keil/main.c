@@ -1,9 +1,16 @@
-#include "tiva_c.h"
+#include "nunchuck.h"
 
 int main(void) {
-	sys_clock(CLK_MOSC, CLK_PLL_ON, 5);
-	i2c_init(I2C_0, 40000000, I2C_100k);
+	struct state current_state;
 	
-	//your code here.
-	while(1);
+	sys_clock(CLK_MOSC, CLK_PLL_ON, 5);
+	
+	current_state = enableNunchuck(I2C_1, 40000000, I2C_100k);
+
+	while(1)
+	{
+		msleep(2500);
+		current_state = getState(I2C_1);
+	}
+	
 }
