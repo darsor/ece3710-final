@@ -10,9 +10,7 @@
 	PB.4 - motor 2 PWM
 */
 
-uint32_t clk_speed = 40000000;
-
-void motors_init(uint16_t freq) {
+void motors_init(uint32_t clk_speed, uint16_t freq) {
 	uint8_t pins = 0xAC;
 	gpio_init(GPIO_B, pins, GPIO_OUT, GPIO_DEN | GPIO_PUR);
 	gpio_write(GPIO_B, 2, 1);
@@ -33,6 +31,7 @@ void motor1_speed(float speed) {
 	} else {
 		gpio_write(GPIO_B, 7, 1);
 		gpio_write(GPIO_B, 5, 0);
+		speed *= -1;
 	}
 	pwm_set_duty(PWM0, speed);
 }
@@ -47,14 +46,15 @@ void motor2_speed(float speed) {
 	} else {
 		gpio_write(GPIO_B, 4, 1);
 		gpio_write(GPIO_B, 2, 0);
+		speed *= -1;
 	}
 	pwm_set_duty(PWM1, speed);
 }
 
-void motor1_freq(uint16_t freq) {
+void motor1_freq(uint32_t clk_speed, uint16_t freq) {
 	pwm_set_freq(PWM0, clk_speed, freq);
 }
 
-void motor2_freq(uint16_t freq) {
+void motor2_freq(uint32_t clk_speed, uint16_t freq) {
 	pwm_set_freq(PWM1, clk_speed, freq);
 }

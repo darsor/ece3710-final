@@ -12,14 +12,14 @@
 	PB.4 - motor 2 PWM
 */
 
-void motors_init(uint16_t freq);
+void motors_init(uint32_t clk_speed, uint16_t freq);
 
 // set motor speed (duty cycle), from -1.0 to 1.0
 void motor1_speed(float speed);
 void motor2_speed(float speed);
 
 // set motor PWM frequency, in Hz
-void motor1_freq(uint16_t freq);
-void motor2_freq(uint16_t freq);
+void motor1_freq(uint32_t clk_speed, uint16_t freq);
+void motor2_freq(uint32_t clk_speed, uint16_t freq);
 
 #endif
