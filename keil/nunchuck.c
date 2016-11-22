@@ -9,14 +9,15 @@ uint8_t buttons = 0x05;
 
 uint8_t addr = 0x52;
 
-struct state enableNunchuck(uint32_t* i2c, uint32_t sys_clock, uint8_t speed)
+struct state enableNunchuck(uint32_t* i2c, uint32_t sys_clock, uint32_t speed)
 {
 	struct state forReturn;
-	uint8_t* data;
+	uint8_t data[3];
 	data[0] = 0x40;
 	data[1] = 0x00;
 	data[2] = 0x00;
 	i2c_init(i2c, sys_clock, speed);
+	i2c_write(I2C_1, addr, data, 3, 0);
 	forReturn = getState(i2c);
 	return forReturn;
 }
@@ -34,9 +35,10 @@ struct state getState(uint32_t* i2c)
 		forReturn.C = (bools >> 0x01) & 0x01;
 		return forReturn;
 }
-
+/*
 uint8_t i2c_read(uint32_t* i2c, uint8_t address, uint8_t s_address) {
 // TODO: High Speed mode
+	
 	i2c[0x000/4] = address << 1;
 	i2c[0x008/4] = s_address;	// desired slave address
 	i2c[0x004/4] = 0x03;			// start and transmit
@@ -46,3 +48,4 @@ uint8_t i2c_read(uint32_t* i2c, uint8_t address, uint8_t s_address) {
 	while (i2c_is_busy(i2c));
 	return i2c[0x008/4];			// return data register
 }
+*/

@@ -352,7 +352,7 @@ uint8_t timer_expired(uint32_t* timer) {
 	return timer[0x01C/4] & 1;
 }
 
-void i2c_init(uint32_t* i2c, uint32_t sys_clock, uint8_t speed) {
+void i2c_init(uint32_t* i2c, uint32_t sys_clock, uint32_t speed) {
 	uint8_t clock_mask;
 	uint32_t* gpio_port;
 	uint8_t gpio_pins;
@@ -399,11 +399,26 @@ void i2c_init(uint32_t* i2c, uint32_t sys_clock, uint8_t speed) {
 	gpio_port[0x52C/4] = alt_func;
 	
 	i2c[0x020/4] = 0x10;				// enable master function
-	i2c[0x00C/4] = (sys_clock/(20*speed))-1 | (speed == I2C_HIGHSPEED) ? 0x80 : 0x00; // set speed
+	i2c[0x00C/4] = 0x13;// | (speed == I2C_HIGHSPEED) ? 0x80 : 0x00; // set speed
 }
 
 uint8_t i2c_is_busy(uint32_t* i2c) {
 	return i2c[0x004/4] & 0x1;
+}
+
+uint8_t i2c_read(uint32_t* i2c, uint8_t address, uint8_t s_address) {
+// TODO: High Speed mode
+	
+	i2c[0x000/4] = address << 1;
+	i2c[0x008/4] = s_address;	// desired slave address
+	i2c[0x004/4] = 0x03;			// start and transmit
+	while (i2c_is_busy(i2c));
+	
+	
+	i2c[0x000/4] = i2c[0x000/4] | 0x01;
+	i2c[0x004/4] = 0x13;			// start, receive, and stop
+	while (i2c_is_busy(i2c));
+	return i2c[0x008/4];			// return data register
 }
 
 void i2c_write(uint32_t* i2c, uint8_t address, uint8_t* data, uint8_t size, uint8_t HS) {
@@ -413,7 +428,7 @@ void i2c_write(uint32_t* i2c, uint8_t address, uint8_t* data, uint8_t size, uint
 		i2c[0x004/4] = 0x13;
 		while (i2c_is_busy(i2c));
 	}
-	
+
 	i2c[0x000/4] = address << 1;
 	i2c[0x008/4] = data[0];
 	if (size == 1) {

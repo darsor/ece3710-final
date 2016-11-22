@@ -24,9 +24,9 @@ struct state
 //	unsigned char zTilt;
 };
 
-struct state enableNunchuck(uint32_t* i2c, uint32_t sys_clock, uint8_t speed);
+struct state enableNunchuck(uint32_t* i2c, uint32_t sys_clock, uint32_t speed);
 struct state getState(uint32_t* i2c);
-uint8_t i2c_read(uint32_t* i2c, uint8_t address, uint8_t s_address);
+//uint8_t i2c_read(uint32_t* i2c, uint8_t address, uint8_t s_address);
 
 
 
