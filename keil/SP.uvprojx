@@ -399,6 +399,16 @@
               <FileType>1</FileType>
               <FilePath>.\motor.c</FilePath>
             </File>
+            <File>
+              <FileName>nunchuck.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\nunchuck.c</FilePath>
+            </File>
+            <File>
+              <FileName>nunchuck.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\nunchuck.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
