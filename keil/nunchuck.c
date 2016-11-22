@@ -19,7 +19,6 @@ void nunchuck_init(uint32_t* i2c, uint32_t clk_speed) {
 struct nunchuck_state get_nunchuck_state(uint32_t* i2c, uint8_t address) {
 		struct nunchuck_state forReturn;
 		uint8_t nunchuck_data[6];
-		uint8_t bools;
 		uint8_t data;
 	
 		data = 0x00;								// send command to remote to take new sample
