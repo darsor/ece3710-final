@@ -112,7 +112,7 @@ uint8_t timer_expired(uint32_t* timer);
 void i2c_init(uint32_t* i2c, uint32_t sys_clock, uint32_t speed);
 uint8_t i2c_is_busy(uint32_t* i2c);
 void i2c_write(uint32_t* i2c, uint8_t address, uint8_t* data, uint8_t size, uint8_t HS);
-uint8_t i2c_read(uint32_t* i2c, uint8_t address, uint8_t s_address);
+void i2c_read(uint32_t* i2c, uint8_t address, uint8_t s_address, uint8_t* data, uint32_t size);
 
 uint32_t* bitband(uint32_t* address, uint8_t bit);
 void msleep(uint32_t milliseconds);

@@ -4,30 +4,20 @@
 #include "tiva_c.h"
 
 
-extern uint8_t joystick_x;
-extern uint8_t joystick_y;
-extern uint8_t tilt_x;
-extern uint8_t tilt_y;
-extern uint8_t tilt_z;
-extern uint8_t buttons;
-
-extern uint8_t addr;
-
-struct state
+struct nunchuck_state
 {
-	_Bool Z;
-	_Bool C;
-	unsigned char xJoystick;
-	unsigned char yJoystick;
-	unsigned char xTilt;
-	unsigned char yTilt;
-//	unsigned char zTilt;
+	_Bool z;
+	_Bool c;
+	uint8_t x_joystick;
+	uint8_t y_joystick;
+	uint16_t x_tilt;
+	uint16_t y_tilt;
+	uint16_t z_tilt;
 };
 
-struct state enableNunchuck(uint32_t* i2c, uint32_t sys_clock, uint32_t speed);
-struct state getState(uint32_t* i2c);
-//uint8_t i2c_read(uint32_t* i2c, uint8_t address, uint8_t s_address);
-
+void nunchuck_init(uint32_t* i2c, uint32_t sys_clock);
+struct nunchuck_state get_nunchuck_state(uint32_t* i2c, uint8_t address);
+void nunchuck_read(uint32_t* i2c, uint8_t address);
 
 
 #endif
