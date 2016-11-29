@@ -8,11 +8,11 @@ void gyro_init(uint32_t* i2c, uint32_t clk_speed) {
 	i2c_init(i2c, clk_speed, I2C_400k);
 	data[0] =  0x20;					// CTRL_REG1
 	data[1] = 0x0F;						// 95 ODR 12.5 BW (same as Spark Fun)- PD off- z,x,y enable
-	i2c_write(I2C_1, gryo_address, data, 2, 0);
+	i2c_write(i2c, gryo_address, data, 2, 0);
 	
 	data[0] =  0x23;					// CTRL_REG4
 	data[1] = 0x20;						// 2000 dps
-	i2c_write(I2C_1, gryo_address, data, 2, 0);
+	i2c_write(i2c, gryo_address, data, 2, 0);
 }
 
 int16_t get_x_angle(uint32_t* i2c){
@@ -41,11 +41,11 @@ void accel_init(uint32_t* i2c, uint32_t clk_speed) {
 	i2c_init(i2c, clk_speed, I2C_400k);
 	data[0] =  0x20;
 	data[1] = 0x57;						// normal power mode, 400k Hz
-	i2c_write(I2C_1, 0x19, data, 2, 0);
+	i2c_write(i2c, 0x19, data, 2, 0);
 	
 	data[0] =  0x23;
 	data[1] = 0x08;						// high resolution (16 bit)
-	i2c_write(I2C_1, 0x19, data, 2, 0);
+	i2c_write(i2c, 0x19, data, 2, 0);
 	
 }
 
