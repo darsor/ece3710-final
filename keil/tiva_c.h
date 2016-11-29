@@ -100,7 +100,7 @@ void gpio_afsel(uint32_t* port, uint8_t pins, uint8_t state);
 void gpio_write(uint32_t* port, uint8_t pin, uint8_t value);
 uint8_t gpio_read(uint32_t* port, uint8_t pin);
 
-void uart_init(uint32_t* uart, uint32_t baud);
+void uart_init(uint32_t* uart, uint32_t baud, uint32_t sys_clock);
 void uart_send(uint32_t* uart, uint8_t data);
 void uart_receive(uint32_t* uart, uint8_t* data);
 uint8_t uart_rx_is_empty(uint32_t* uart);
