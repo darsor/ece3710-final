@@ -22,7 +22,7 @@ void motors_init(uint32_t clk_speed, uint16_t freq) {
 }
 
 void motor1_speed(float speed) {
-	if (speed > 1.0 || speed < -1.0) return;
+	if (speed > 1 || speed < -1) return;
 	if (speed == 0) {
 		gpio_write(GPIO_B, 5, 1);
 		gpio_write(GPIO_B, 7, 1);
@@ -38,7 +38,7 @@ void motor1_speed(float speed) {
 }
 
 void motor2_speed(float speed) {
-	if (speed > 1.0 || speed < -1.0) return;
+	if (speed > 1 || speed < -1) return;
 	if (speed == 0) {
 		gpio_write(GPIO_B, 2, 1);
 		gpio_write(GPIO_B, 3, 1);

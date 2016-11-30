@@ -8,7 +8,7 @@ uint32_t clk_speed = 40000000;
 int main(void) {
 	float speed = 0;
 	uint16_t freq = 200;
-	uint16_t x_angle = 0;
+	int16_t y_accel = 0;
 	//uint16_t y_angle = 0;
 	//int16_t freq_inc = 500;
 	//float speed_inc = 0.1;
@@ -25,10 +25,10 @@ int main(void) {
 	motor2_speed(speed);
 	
 	while(1) {
-		x_angle = get_x_angle(I2C_2); // for motor 1
+		y_accel = get_y_accel(I2C_2); // for motor 1
 		//y_angle = get_y_angle(I2C_2); // for motor 2
 		
-		speed = x_angle / 2048.0;
+		speed = y_accel / -1024.0;
 		motor1_speed(speed);
 		motor2_speed(speed);
 		
