@@ -3,66 +3,49 @@
 #include "nunchuck.h"
 #include "imu.h"
 #include "pid.h"
+#include <math.h>
+
+#define RAD_TO_DEG 57.29578
+#define GYRO_TO_DPS 0.00869750976 // (250.0 / 32768.0) * 1.14
 
 uint32_t clk_speed = 40000000;
+volatile float gr_angle = 0;
+volatile float angle = 0;
 
-int main(void) {
-	float speed = 0;
-	uint16_t freq = 200;
-	int16_t y_accel = 0;
-	//uint16_t y_angle = 0;
-	//int16_t freq_inc = 500;
-	//float speed_inc = 0.1;
-	//struct nunchuck_state state; 
+int main(void) {	
 	sys_clock(CLK_MOSC, CLK_PLL_ON, 5);
-	gpio_init(GPIO_F, 0x11, GPIO_IN, GPIO_DEN | GPIO_PUR);
-	//nunchuck_init(I2C_1, clk_speed);
-	//gyro_init(I2C_2, clk_speed);
+
+	uart_init(UART0, 115200, clk_speed);
+	gyro_init(I2C_2, clk_speed);
 	accel_init(I2C_2, clk_speed);
+	timer_init(TIMER32_0, clk_speed/100, TIMER_PERIODIC);
 	
+	timer_timeout_int_en(TIMER32_0);
+	nvic_int_en(19);
+	timer_start(TIMER32_0);
 	
-	motors_init(clk_speed, freq);
-	motor1_speed(speed);
-	motor2_speed(speed);
+	while(1);
+}
+
+void TIMER0A_Handler(void) {
+	float xl_angle = 0;
+	float dps;
+	int16_t raw_gr_x;
+	int16_t raw_xl_y;
+	int16_t raw_xl_z;
 	
-	while(1) {
-		y_accel = get_y_accel(I2C_2); // for motor 1
-		//y_angle = get_y_angle(I2C_2); // for motor 2
-		
-		speed = y_accel / -1024.0;
-		motor1_speed(speed);
-		motor2_speed(speed);
-		
-		/*state = get_nunchuck_state(I2C_1, 0x052); // test nunchuck
-		speed = state.y_joystick/128.0 - 1;
-		motor1_speed(speed);
-		motor2_speed(speed);*/
-		//msleep(1000);
-		/*if (!gpio_read(GPIO_F, 4)) { // test motors
-			speed += speed_inc;
-			if (speed >= 1) {
-				speed = 0.99;
-				speed_inc = -0.1;
-			} else if (speed <= -1) {
-				speed = -0.99;
-				speed_inc = 0.1;
-			}
-			motor1_speed(speed);
-			motor2_speed(speed);
-			msleep(1000);
-		}
-		if (!gpio_read(GPIO_F, 0)) {
-			freq += freq_inc;
-			if (freq >= 4000) {
-				freq = 4000;
-				freq_inc = -500;
-			} else if (freq <= 500) {
-				freq = 500;
-				freq_inc = 500;
-			}
-			motor1_freq(clk_speed, freq);
-			motor2_freq(clk_speed, freq);
-			msleep(1000);
-		}*/
-	}
+	uint32_t timer_current = timer_value(TIMER32_0);
+	timer_timeout_int_clr(TIMER32_0);
+	
+	raw_gr_x = get_x_angle(I2C_2) - 80;
+	raw_xl_y = get_y_accel(I2C_2);
+	raw_xl_z = get_z_accel(I2C_2);
+	if (raw_xl_z == 0) raw_xl_z = 1;
+
+	xl_angle = atan2(0-raw_xl_y, raw_xl_z) * RAD_TO_DEG;
+	dps = raw_gr_x * GYRO_TO_DPS; // this is correct
+	gr_angle -= dps * 0.01f;
+	angle = 0.85f * (angle + dps*0.01f) + 0.15f * xl_angle;
+
+	uprintf(UART0, "%4.4f,%4.4f,%4.4f\r\n", xl_angle, gr_angle, angle);
 }
