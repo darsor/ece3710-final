@@ -14,7 +14,7 @@ void motors_init(uint32_t clk_speed, uint16_t freq) {
 	uint8_t pins = 0xAC;
 	gpio_init(GPIO_B, pins, GPIO_OUT, GPIO_DEN | GPIO_PUR);
 	gpio_write(GPIO_B, 2, 1);
-	gpio_write(GPIO_B, 4, 1);
+	gpio_write(GPIO_B, 3, 1);
 	gpio_write(GPIO_B, 5, 1);
 	gpio_write(GPIO_B, 7, 1);
 	pwm_init(PWM0, clk_speed, freq);
@@ -22,30 +22,32 @@ void motors_init(uint32_t clk_speed, uint16_t freq) {
 }
 
 void motor1_speed(float speed) {
+	if (speed > 1 || speed < -1) return;
 	if (speed == 0) {
 		gpio_write(GPIO_B, 5, 1);
 		gpio_write(GPIO_B, 7, 1);
 	} else if (speed > 0) {
-		gpio_write(GPIO_B, 5, 1);
-		gpio_write(GPIO_B, 7, 0);
-	} else {
 		gpio_write(GPIO_B, 7, 1);
 		gpio_write(GPIO_B, 5, 0);
+	} else {
+		gpio_write(GPIO_B, 5, 1);
+		gpio_write(GPIO_B, 7, 0);
 		speed *= -1;
 	}
 	pwm_set_duty(PWM0, speed);
 }
 
 void motor2_speed(float speed) {
+	if (speed > 1 || speed < -1) return;
 	if (speed == 0) {
 		gpio_write(GPIO_B, 2, 1);
-		gpio_write(GPIO_B, 4, 1);
+		gpio_write(GPIO_B, 3, 1);
 	} else if (speed > 0) {
-		gpio_write(GPIO_B, 2, 1);
-		gpio_write(GPIO_B, 4, 0);
-	} else {
-		gpio_write(GPIO_B, 4, 1);
+		gpio_write(GPIO_B, 3, 1);
 		gpio_write(GPIO_B, 2, 0);
+	} else {
+		gpio_write(GPIO_B, 2, 1);
+		gpio_write(GPIO_B, 3, 0);
 		speed *= -1;
 	}
 	pwm_set_duty(PWM1, speed);
