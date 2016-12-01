@@ -41,11 +41,11 @@ void accel_init(uint32_t* i2c, uint32_t clk_speed) {
 	i2c_init(i2c, clk_speed, I2C_400k);
 	data[0] =  0x20;
 	data[1] = 0x57;						// normal power mode, 400k Hz
-	i2c_write(i2c, 0x19, data, 2, 0);
+	i2c_write(i2c, accel_address, data, 2, 0);
 	
 	data[0] =  0x23;
 	data[1] = 0x08;						// high resolution (16 bit)
-	i2c_write(i2c, 0x19, data, 2, 0);
+	i2c_write(i2c, accel_address, data, 2, 0);
 	
 }
 
