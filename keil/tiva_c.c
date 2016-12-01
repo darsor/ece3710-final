@@ -1,5 +1,7 @@
 #include "tiva_c.h"
+#include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
 
 uint32_t* SYS_CTL = (uint32_t*) 0x400FE000;
 uint32_t* CORE_P  = (uint32_t*) 0xE000E000;
@@ -311,6 +313,17 @@ void uart_send_stream(uint32_t* uart, unsigned char* str) {
 void uart_rx_int(uint32_t* uart) {
 	uart[0x038/4] |= 0x10;			// mask UART RX interrupt
 	uart[0x034/4] &= 0x0E;			// set trigger at RX FIFO >= 1/8
+}
+
+int uprintf(uint32_t* uart, const char* format, ...) {
+	int ret;
+	char string[128];
+	va_list args;
+	va_start(args, format);
+	ret = vsnprintf(string, 128, format, args);
+	va_end(args);
+	uart_send_stream(uart, (unsigned char*) string);
+	return ret;
 }
 
 void timer_init(uint32_t* timer, uint32_t reload, uint8_t mode) {
