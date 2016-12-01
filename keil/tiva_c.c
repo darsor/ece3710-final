@@ -279,7 +279,7 @@ void uart_init(uint32_t* uart, uint32_t baud, uint32_t sys_clock) {
 	uart[0x24/4] = brdi;				// set baud rate
 	uart[0x28/4] = brdf;
 	uart[0x2C/4] = 0x70;				// 8-bit frame and FIFO enable (8N1)
-	uart[0x30/4] |= 1;					// enable UART
+	uart[0x30/4] |= 5;					// enable UART (with system clock)
 }
 
 // send byte over UART
@@ -349,6 +349,10 @@ void timer_init(uint32_t* timer, uint32_t reload, uint8_t mode) {
 	timer[0x004/4] |= mode;				// set periodic or one-shot
 	// the timer counts down by default
 	timer[0x028/4] = reload;			// set reload value
+}
+
+uint32_t timer_value(uint32_t* timer) {
+	return timer[0x050/4];
 }
 
 void timer_start(uint32_t* timer) {
