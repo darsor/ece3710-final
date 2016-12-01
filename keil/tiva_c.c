@@ -434,12 +434,12 @@ void i2c_read(uint32_t* i2c, uint8_t address, uint8_t s_address, uint8_t* data, 
 	while (i2c_is_busy(i2c));
 	
 	if (size == 1) {
-	i2c[0x000/4] = i2c[0x000/4] | 0x01;	
-	i2c[0x004/4] = 0x03;			// re-start, receive, negative ACK
-	while (i2c_is_busy(i2c));
-	data[0] = i2c[0x008/4];
-	i2c[0x004/4] = 0x04;			// stop
-	return;
+        i2c[0x000/4] = i2c[0x000/4] | 0x01;	
+        i2c[0x004/4] = 0x03;	    // re-start, receive, negative ACK
+        while (i2c_is_busy(i2c));
+        data[0] = i2c[0x008/4];
+        i2c[0x004/4] = 0x04;		// stop
+        return;
 	}
 	
 	i2c[0x000/4] = i2c[0x000/4] | 0x01;
