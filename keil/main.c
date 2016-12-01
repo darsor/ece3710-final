@@ -2,6 +2,7 @@
 #include "motor.h"
 #include "nunchuck.h"
 #include "imu.h"
+#include "pid.h"
 #include "test.h"
 
 uint32_t clk_speed = 40000000;
