@@ -1,5 +1,7 @@
 #include "tiva_c.h"
+#include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
 
 uint32_t* SYS_CTL = (uint32_t*) 0x400FE000;
 uint32_t* CORE_P  = (uint32_t*) 0xE000E000;
@@ -313,6 +315,17 @@ void uart_rx_int(uint32_t* uart) {
 	uart[0x034/4] &= 0x0E;			// set trigger at RX FIFO >= 1/8
 }
 
+int uprintf(uint32_t* uart, const char* format, ...) {
+	int ret;
+	char string[128];
+	va_list args;
+	va_start(args, format);
+	ret = vsnprintf(string, 128, format, args);
+	va_end(args);
+	uart_send_stream(uart, (unsigned char*) string);
+	return ret;
+}
+
 void timer_init(uint32_t* timer, uint32_t reload, uint8_t mode) {
 	uint8_t clock_mask;
 	if (timer == TIMER32_0) {
@@ -421,12 +434,12 @@ void i2c_read(uint32_t* i2c, uint8_t address, uint8_t s_address, uint8_t* data, 
 	while (i2c_is_busy(i2c));
 	
 	if (size == 1) {
-	i2c[0x000/4] = i2c[0x000/4] | 0x01;	
-	i2c[0x004/4] = 0x03;			// re-start, receive, negative ACK
-	while (i2c_is_busy(i2c));
-	data[0] = i2c[0x008/4];
-	i2c[0x004/4] = 0x04;			// stop
-	return;
+        i2c[0x000/4] = i2c[0x000/4] | 0x01;	
+        i2c[0x004/4] = 0x03;	    // re-start, receive, negative ACK
+        while (i2c_is_busy(i2c));
+        data[0] = i2c[0x008/4];
+        i2c[0x004/4] = 0x04;		// stop
+        return;
 	}
 	
 	i2c[0x000/4] = i2c[0x000/4] | 0x01;
