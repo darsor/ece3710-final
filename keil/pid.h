@@ -19,7 +19,7 @@ extern float upper_int_range, lower_int_range;
 extern float integral, derivative, output;
 
 // PID functions
-float update(float sp, float pv);
+float pid_update(float sp, float pv);
 void initialize_pid(float p, float i, float d, float dt);
 void set_limits(float lower, float upper);			// output will not surpass these limits
 void set_dampening(float low, float high);         	// integral term will be damped in this range

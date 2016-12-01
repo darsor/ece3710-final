@@ -2,6 +2,7 @@
 #include "motor.h"
 #include "nunchuck.h"
 #include "imu.h"
+#include "tiva_c.h"
 
 void test_motors(uint32_t* port, uint32_t clk_speed)
 {
@@ -48,15 +49,18 @@ void test_motors(uint32_t* port, uint32_t clk_speed)
 void test_nunchuck(uint32_t clk_speed)
 {
 	float speed = 0;
-	struct nunchuck_state state; 
+	struct nunchuck_state state;
+	motors_init(clk_speed, 200);
 	nunchuck_init(I2C_1, clk_speed);
+	uart_init(UART4, 115200, clk_speed);
 		
 	while(1)
 	{
 		state = get_nunchuck_state(I2C_1, 0x052); // test nunchuck
-		speed = state.y_joystick/128.0 - 1;
+		speed = (state.y_joystick/128.0 - 1)/4;
 		motor1_speed(speed);
-		motor2_speed(speed);	
+		motor2_speed(speed);
+		uprintf(UART4, "speed: %f\r\n", speed);
 	}
 }		
 

@@ -1,4 +1,5 @@
 #include "pid.h"
+#include "tiva_c.h"
 
 uint8_t using_limits = 0;
 uint8_t using_dampening = 0;
@@ -13,8 +14,10 @@ float upper_damp, lower_damp;
 float upper_deadzone, lower_deadzone;
 float upper_int_range, lower_int_range;
 float integral = 0, derivative = 0, output = 0;
+int num = 0;
 
-float update(float sp, float pv) {
+float pid_update(float sp, float pv) {
+	float p_term, i_term, d_term;
 	// calculate error (proportional)
 	float error = sp - pv;
 	if (!is_initialized) {
@@ -35,20 +38,28 @@ float update(float sp, float pv) {
 	derivative = (error-error_old) / dt;
 	
 	// calculate output
-	output = Kp*error + Ki*integral + Kd*derivative;
+	p_term = Kp*error;
+	i_term = Ki*integral;
+	d_term = Kd*derivative;
+	output = p_term + i_term + d_term;
 	
 	// apply limits and deadzone
-	if (using_limits) {
-			 if (output > upper_limit) output = upper_limit;
-		else if (output < lower_limit) output = lower_limit;
-	}
 	if (using_deadzone && error != 0) {
 		if (error < 0) output += lower_deadzone;
 		else output += upper_deadzone;	// constant offset
 	}
+	if (using_limits) {
+		if (output > upper_limit) output = upper_limit;
+		else if (output < lower_limit) output = lower_limit;
+	}
 	if (error == 0) output = 0;
 	
 	error_old = error;
+	num++;
+	if (++num > 100) {
+		uprintf(UART4, "p: %06.3f, i: %06.3f, d: %06.3f, output: %06.3f\r\n", p_term, i_term, d_term, output);
+		num = 0;
+	}
 	return output;
 }
 
