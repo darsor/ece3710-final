@@ -1,7 +1,11 @@
 #include "tiva_c.h"
 #include "motor.h"
 #include "nunchuck.h"
+<<<<<<< HEAD
 #include "imu.h"
+=======
+#include "pid.h"
+>>>>>>> origin/master
 
 uint32_t clk_speed = 40000000;
 
