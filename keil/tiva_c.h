@@ -107,6 +107,7 @@ uint8_t uart_rx_is_empty(uint32_t* uart);
 uint8_t uart_tx_is_full(uint32_t* uart);
 void uart_send_stream(uint32_t* uart, unsigned char* str);
 void uart_rx_int(uint32_t* uart);
+int uprintf(uint32_t* uart, const char* format, ...);
 
 void timer_init(uint32_t* timer, uint32_t reload, uint8_t mode);
 void timer_start(uint32_t* timer);
