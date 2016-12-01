@@ -112,6 +112,7 @@ int uprintf(uint32_t* uart, const char* format, ...);
 void timer_init(uint32_t* timer, uint32_t reload, uint8_t mode);
 void timer_start(uint32_t* timer);
 void timer_stop(uint32_t* timer);
+uint32_t timer_value(uint32_t* timer);
 void timer_timeout_int_en(uint32_t* timer);
 void timer_timeout_int_clr(uint32_t* timer);
 uint8_t timer_expired(uint32_t* timer);
