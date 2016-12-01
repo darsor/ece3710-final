@@ -206,15 +206,14 @@ uint8_t gpio_read(uint32_t* port, uint8_t pin) {
 	return (port[0x3FC/4] >> pin) & 1;
 }
 
-// initialize specified UART with baud. (Assuming FIFO and 8N1 is desired)
-// also configures Rx and Tx pins for the specified UART
-// assumes 16 MHz system clock used for UART
-void uart_init(uint32_t* uart, uint32_t baud) {
+// assumes FIFO and 8N1 are desired
+void uart_init(uint32_t* uart, uint32_t baud, uint32_t sys_clock) {
 	uint8_t clk_mask;
 	uint32_t* gpio_port;
 	uint8_t gpio_mask;
 	uint32_t alt_func;
 	uint16_t brdi;
+	float brd;
 	uint8_t brdf;
 	if (uart == UART0) {
 		clk_mask = 0x01;
@@ -273,8 +272,9 @@ void uart_init(uint32_t* uart, uint32_t baud) {
 	
 	uart[0x30/4] &= ~((uint32_t) 0x1);	// disable UART
 	
-	brdi = 1000000 / baud;				// calculate baud divisor
-	brdf = 64 * (1000000.0 / baud - brdi) + 0.5;
+	brd = ((float)sys_clock) / (baud << 4);		// calculate baud divisor
+	brdi = brd;
+	brdf = 64 * (brd - brdi) + 0.5f;
 	
 	uart[0x24/4] = brdi;				// set baud rate
 	uart[0x28/4] = brdf;
@@ -425,22 +425,21 @@ uint8_t i2c_is_busy(uint32_t* i2c) {
 	return i2c[0x004/4] & 0x1;
 }
 
-
 void i2c_read(uint32_t* i2c, uint8_t address, uint8_t s_address, uint8_t* data, uint32_t size) {
 	uint8_t i=0;
+			
 	i2c[0x000/4] = address << 1;
 	i2c[0x008/4] = s_address;
 	i2c[0x004/4] = 0x03;			// start, transmit
 	while (i2c_is_busy(i2c));
 	
 	if (size == 1) {
-		i2c[0x000/4] = i2c[0x000/4] | 0x01;	
-		i2c[0x004/4] = 0x03;			// re-start, receive, negative ACK
-		while (i2c_is_busy(i2c));
-		data[0] = i2c[0x008/4];
-		i2c[0x004/4] = 0x04;			// stop
-		while (i2c_is_busy(i2c));
-		return;
+	i2c[0x000/4] = i2c[0x000/4] | 0x01;	
+	i2c[0x004/4] = 0x03;			// re-start, receive, negative ACK
+	while (i2c_is_busy(i2c));
+	data[0] = i2c[0x008/4];
+	i2c[0x004/4] = 0x04;			// stop
+	return;
 	}
 	
 	i2c[0x000/4] = i2c[0x000/4] | 0x01;
@@ -456,7 +455,7 @@ void i2c_read(uint32_t* i2c, uint8_t address, uint8_t s_address, uint8_t* data, 
 	
 	i2c[0x004/4] = 0x01;			// receive and no ACK
 	while (i2c_is_busy(i2c));
-	data[5] = i2c[0x008/4];
+	data[size-1] = i2c[0x008/4];
 	
 	i2c[0x004/4] = 0x04;			// stop
 	while (i2c_is_busy(i2c));
