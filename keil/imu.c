@@ -6,12 +6,8 @@ uint8_t gryo_address = 0x6B;
 void gyro_init(uint32_t* i2c, uint32_t clk_speed) {
 	uint8_t data[2];
 	i2c_init(i2c, clk_speed, I2C_400k);
-	data[0] =  0x20;					// CTRL_REG1
+	data[0] = 0x20;						// CTRL_REG1
 	data[1] = 0x0F;						// 95 ODR 12.5 BW (same as Spark Fun)- PD off- z,x,y enable
-	i2c_write(i2c, gryo_address, data, 2, 0);
-	
-	data[0] =  0x23;					// CTRL_REG4
-	data[1] = 0x20;						// 2000 dps
 	i2c_write(i2c, gryo_address, data, 2, 0);
 }
 
