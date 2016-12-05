@@ -14,6 +14,7 @@ float upper_damp, lower_damp;
 float upper_deadzone, lower_deadzone;
 float upper_int_range, lower_int_range;
 float integral = 0, derivative = 0, output = 0;
+float deadzone_scale = 0;
 int num = 0;
 
 float pid_update(float sp, float pv) {
@@ -45,8 +46,8 @@ float pid_update(float sp, float pv) {
 	
 	// apply limits and deadzone
 	if (using_deadzone && error != 0) {
-		if (error < 0) output += lower_deadzone;
-		else output += upper_deadzone;	// constant offset
+		if (error < 0) output = lower_deadzone + output * deadzone_scale;
+		else output = upper_deadzone + output * deadzone_scale;
 	}
 	if (using_limits) {
 		if (output > upper_limit) output = upper_limit;
@@ -85,10 +86,15 @@ void set_deadzone(float low, float high) {
 	upper_deadzone = high;
 	lower_deadzone = low;
 	using_deadzone = 1;
+	deadzone_scale = 1.0f - high;
 }
 
 void set_integral_range(float low, float high) {
 	upper_int_range = high;
 	lower_int_range = low;
 	using_int_range = 1;
+}
+
+void reset_i_term(void) {
+	integral = 0;
 }

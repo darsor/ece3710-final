@@ -27,12 +27,11 @@ int main(void) {
 	timer_init(TIMER32_1, clk_speed/2.5, TIMER_PERIODIC);
     gpio_init(GPIO_F, 0x0E, GPIO_OUT, GPIO_DEN);
     nunchuck_init(I2C_1, clk_speed);
-	motors_init(clk_speed, 200);
+	motors_init(clk_speed, 20000);
 	
 	initialize_pid(PID[0], PID[1], PID[2], 0.002);
 	set_limits(-1.0, 1.0);
-	set_deadzone(-0.145, 0.145);
-	//set_dampening(-0.5, 0.5);
+	set_deadzone(-0.54, 0.54);
 	
 	timer_timeout_int_en(TIMER32_0);
 	timer_timeout_int_en(TIMER32_1);
@@ -115,6 +114,10 @@ void TIMER1A_Handler(void) {
 			gpio_write(GPIO_F, 3, 0);
 			gpio_write(GPIO_F, 2, 1); //if D, then blue
 		}
+	}
+	
+	if (state.c) {
+		reset_i_term();
 	}
 
 	initialize_pid(PID[0], PID[1], PID[2], 0.01);
