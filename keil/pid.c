@@ -55,8 +55,7 @@ float pid_update(float sp, float pv) {
 	if (error == 0) output = 0;
 	
 	error_old = error;
-	num++;
-	if (++num > 100) {
+	if (++num > 200) {
 		uprintf(UART4, "p: %06.3f, i: %06.3f, d: %06.3f, output: %06.3f\r\n", p_term, i_term, d_term, output);
 		num = 0;
 	}
