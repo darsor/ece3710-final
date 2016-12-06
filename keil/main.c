@@ -20,7 +20,7 @@ volatile uint8_t which = 0; // increment p or i or d
 int main(void) {	
 	sys_clock(CLK_MOSC, CLK_PLL_ON, 5);
 
-	uart_init(UART4, 256000, clk_speed);
+	uart_init(UART4, 115200, clk_speed);
 	gyro_init(I2C_2, clk_speed);
 	accel_init(I2C_2, clk_speed);
 	timer_init(TIMER32_0, clk_speed/400, TIMER_PERIODIC);
