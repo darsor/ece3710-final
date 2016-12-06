@@ -7,7 +7,7 @@
 #include <math.h>
 
 #define RAD_TO_DEG 57.29578
-#define GYRO_TO_DPS 0.00869750976 // (250.0 / 32768.0) * 1.14
+#define GYRO_TO_DPS 0.0172813 // (500.0 / 32767.0) * 1.132512
 
 uint32_t clk_speed = 40000000;
 //volatile float gr_angle = 0;
@@ -20,7 +20,7 @@ volatile uint8_t which = 0; // increment p or i or d
 int main(void) {	
 	sys_clock(CLK_MOSC, CLK_PLL_ON, 5);
 
-	uart_init(UART4, 115200, clk_speed);
+	uart_init(UART4, 256000, clk_speed);
 	gyro_init(I2C_2, clk_speed);
 	accel_init(I2C_2, clk_speed);
 	timer_init(TIMER32_0, clk_speed/400, TIMER_PERIODIC);
@@ -29,7 +29,7 @@ int main(void) {
     nunchuck_init(I2C_1, clk_speed);
 	motors_init(clk_speed, 20000);
 	
-	initialize_pid(PID[0], PID[1], PID[2], 0.002);
+	initialize_pid(PID[0], PID[1], PID[2], 0.0025);
 	set_limits(-1.0, 1.0);
 	set_deadzone(-0.54, 0.54);
 	
@@ -47,7 +47,7 @@ int main(void) {
 }
 
 void TIMER0A_Handler(void) {
-    float xl_angle = 0;
+	float xl_angle = 0;
     float dps, speed;
     int16_t raw_gr_x;
     int16_t raw_xl_y;
@@ -62,9 +62,9 @@ void TIMER0A_Handler(void) {
     if (raw_xl_z == 0) raw_xl_z = 1;
 
     xl_angle = atan2(raw_xl_y, raw_xl_z) * RAD_TO_DEG;
-    dps = raw_gr_x * GYRO_TO_DPS; // this is correct
-    //gr_angle = dps * 0.005f;
-    angle = 0.85f * (angle + dps*0.002f) + 0.15f * xl_angle;
+    dps = raw_gr_x * GYRO_TO_DPS;
+    //gr_angle += dps * 0.0025f;
+    angle = 0.98f * (angle + dps*0.0025f) + 0.02f * xl_angle;
 	
 	speed = pid_update(0.0, angle);
 	motor1_speed(speed);
