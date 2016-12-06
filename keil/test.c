@@ -101,3 +101,23 @@ void test_gyro(uint32_t* i2c, uint32_t clk_speed)
 		motor2_speed(speed2);
 	}
 }
+
+void test_imu_print(uint32_t clk_speed) {
+	uart_init(UART0, 115200, clk_speed);
+	gyro_init(I2C_2, clk_speed);
+	accel_init(I2C_2, clk_speed);
+	timer_init(TIMER32_4, clk_speed/200, TIMER_PERIODIC);
+	timer_timeout_int_en(TIMER32_4);
+	nvic_int_en(70);
+	timer_start(TIMER32_4);
+	
+	while(1);
+}
+
+void TIMER4A_Handler(void) {
+	int16_t raw_gr_x = get_x_angle(I2C_2)-10;
+    int16_t raw_xl_y = get_y_accel(I2C_2);
+    int16_t raw_xl_z = get_z_accel(I2C_2);
+	uprintf(UART0, "gyro_x: %5d, accel_y: %5d, accel_z: %5d\r\n", raw_gr_x, raw_xl_y, raw_xl_z);
+	timer_timeout_int_clr(TIMER32_4);
+}
