@@ -23,8 +23,8 @@ int main(void) {
 	uart_init(UART4, 115200, clk_speed);
 	gyro_init(I2C_2, clk_speed);
 	accel_init(I2C_2, clk_speed);
-	timer_init(TIMER32_0, clk_speed/500, TIMER_PERIODIC);
-	timer_init(TIMER32_1, clk_speed/2.5, TIMER_PERIODIC);
+	timer_init(TIMER32_0, clk_speed/400, TIMER_PERIODIC);
+	timer_init(TIMER32_1, clk_speed/4, TIMER_PERIODIC);
     gpio_init(GPIO_F, 0x0E, GPIO_OUT, GPIO_DEN);
     nunchuck_init(I2C_1, clk_speed);
 	motors_init(clk_speed, 20000);
@@ -56,7 +56,7 @@ void TIMER0A_Handler(void) {
     //uint32_t timer_current = timer_value(TIMER32_0);
     timer_timeout_int_clr(TIMER32_0);
 
-    raw_gr_x = get_x_angle(I2C_2) - 80;
+    raw_gr_x = get_x_angle(I2C_2) - 10;
     raw_xl_y = get_y_accel(I2C_2);
     raw_xl_z = get_z_accel(I2C_2);
     if (raw_xl_z == 0) raw_xl_z = 1;
@@ -73,11 +73,11 @@ void TIMER0A_Handler(void) {
 		inc = 0;
 		uprintf(UART4, "\ntimer: %u\n", timer_current);
 	} */
-	//uprintf(UART4, "    Kp = %09.6f, Ki = %09.6f Kd = %09.6f delta = %09.6f\r\n", PID[0], PID[1], PID[2], delta);
 }
 
 void TIMER1A_Handler(void) {
 	struct nunchuck_state state; 
+	float p, i, d, o;
 	timer_timeout_int_clr(TIMER32_1);
 	
 	state = get_nunchuck_state(I2C_1,0x052);
@@ -121,5 +121,9 @@ void TIMER1A_Handler(void) {
 	}
 
 	initialize_pid(PID[0], PID[1], PID[2], 0.01);
-	uprintf(UART4, "                                                                                      Kp = %09.6f, Ki = %09.6f Kd = %09.6f delta = %09.6f\r\n", PID[0], PID[1], PID[2], delta);
+	p = get_proportional();
+	i = get_integral();
+	d = get_derivative();
+	o = get_output();
+	uprintf(UART4, "angle = %08.3f       p: %06.3f, i: %06.3f, d: %06.3f, output: %06.3f       Kp = %09.6f, Ki = %09.6f Kd = %09.6f delta = %09.6f\r\n", angle, p, i, d, o, PID[0], PID[1], PID[2], delta);
 }
