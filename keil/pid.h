@@ -27,4 +27,9 @@ void set_deadzone(float low, float high);          	// the "zero" value at which
 void set_integral_range(float low, float high);     // the integral term will not build up outside of this range
 void reset_i_term(void);
 
+float get_proportional(void);
+float get_integral(void);
+float get_derivative(void);
+float get_output(void);
+
 #endif

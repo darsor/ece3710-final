@@ -45,7 +45,7 @@ float pid_update(float sp, float pv) {
 	output = p_term + i_term + d_term;
 	
 	// apply limits and deadzone
-	if (using_deadzone && error != 0) {
+	if (using_deadzone) {
 		if (error < 0) output = lower_deadzone + output * deadzone_scale;
 		else output = upper_deadzone + output * deadzone_scale;
 	}
@@ -56,10 +56,6 @@ float pid_update(float sp, float pv) {
 	if (error == 0) output = 0;
 	
 	error_old = error;
-	if (++num > 200) {
-		uprintf(UART4, "p: %06.3f, i: %06.3f, d: %06.3f, output: %06.3f\r\n", p_term, i_term, d_term, output);
-		num = 0;
-	}
 	return output;
 }
 
@@ -97,4 +93,20 @@ void set_integral_range(float low, float high) {
 
 void reset_i_term(void) {
 	integral = 0;
+}
+
+float get_proportional(void) {
+	return Kp*error_old;
+}
+
+float get_integral(void) {
+	return Ki*integral;
+}
+
+float get_derivative(void) {
+	return Kd*derivative;
+}
+
+float get_output(void) {
+	return output;
 }
