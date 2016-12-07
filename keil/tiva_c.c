@@ -317,10 +317,10 @@ void uart_rx_int(uint32_t* uart) {
 
 int uprintf(uint32_t* uart, const char* format, ...) {
 	int ret;
-	char string[128];
+	char string[256];
 	va_list args;
 	va_start(args, format);
-	ret = vsnprintf(string, 128, format, args);
+	ret = vsnprintf(string, 256, format, args);
 	va_end(args);
 	uart_send_stream(uart, (unsigned char*) string);
 	return ret;
@@ -673,12 +673,16 @@ void pwm_init(uint32_t* pwm, uint32_t clk_speed, uint16_t freq) {
 
 void pwm_set_freq(uint32_t* pwm, uint32_t clk_speed, uint16_t freq) {
 	float duty = pwm[0x018/4] / (float) pwm[0x010/4];	// duty cycle
-	pwm[0x010/4] = (clk_speed >> 2) / freq - 1;				// new frequency
+	pwm[0x010/4] = (clk_speed >> 2) / freq - 1;			// new frequency
 	pwm[0x018/4] = pwm[0x010/4] * duty;					// new cmpA value, preserving duty cycle
 }
 
 void pwm_set_duty(uint32_t* pwm, float duty) {
-	pwm[0x018/4] = pwm[0x010/4] * duty;
+	if (duty == 1.0f || duty == -1.0f) {
+		pwm[0x018/4] = pwm[0x010/4] - 1;
+	} else {
+		pwm[0x018/4] = pwm[0x010/4] * duty - 1;
+	}
 }
 
 void msleep(uint32_t milliseconds) {

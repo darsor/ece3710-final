@@ -19,11 +19,17 @@ extern float upper_int_range, lower_int_range;
 extern float integral, derivative, output;
 
 // PID functions
-float update(float sp, float pv);
+float pid_update(float sp, float pv);
 void initialize_pid(float p, float i, float d, float dt);
 void set_limits(float lower, float upper);			// output will not surpass these limits
 void set_dampening(float low, float high);         	// integral term will be damped in this range
 void set_deadzone(float low, float high);          	// the "zero" value at which the system responds
 void set_integral_range(float low, float high);     // the integral term will not build up outside of this range
+void reset_i_term(void);
+
+float get_proportional(void);
+float get_integral(void);
+float get_derivative(void);
+float get_output(void);
 
 #endif

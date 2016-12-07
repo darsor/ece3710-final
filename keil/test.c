@@ -2,6 +2,7 @@
 #include "motor.h"
 #include "nunchuck.h"
 #include "imu.h"
+#include "tiva_c.h"
 
 void test_motors(uint32_t* port, uint32_t clk_speed)
 {
@@ -48,15 +49,18 @@ void test_motors(uint32_t* port, uint32_t clk_speed)
 void test_nunchuck(uint32_t clk_speed)
 {
 	float speed = 0;
-	struct nunchuck_state state; 
+	struct nunchuck_state state;
+	motors_init(clk_speed, 20000);
 	nunchuck_init(I2C_1, clk_speed);
+	uart_init(UART4, 115200, clk_speed);
 		
 	while(1)
 	{
 		state = get_nunchuck_state(I2C_1, 0x052); // test nunchuck
-		speed = state.y_joystick/128.0 - 1;
+		speed = (state.y_joystick/128.0 - 1);
 		motor1_speed(speed);
-		motor2_speed(speed);	
+		motor2_speed(speed);
+		uprintf(UART4, "speed: %f\r\n", speed);
 	}
 }		
 
@@ -96,4 +100,24 @@ void test_gyro(uint32_t* i2c, uint32_t clk_speed)
 		motor1_speed(speed); 
 		motor2_speed(speed2);
 	}
+}
+
+void test_imu_print(uint32_t clk_speed) {
+	uart_init(UART0, 115200, clk_speed);
+	gyro_init(I2C_2, clk_speed);
+	accel_init(I2C_2, clk_speed);
+	timer_init(TIMER32_4, clk_speed/200, TIMER_PERIODIC);
+	timer_timeout_int_en(TIMER32_4);
+	nvic_int_en(70);
+	timer_start(TIMER32_4);
+	
+	while(1);
+}
+
+void TIMER4A_Handler(void) {
+	int16_t raw_gr_x = get_x_angle(I2C_2)-10;
+    int16_t raw_xl_y = get_y_accel(I2C_2);
+    int16_t raw_xl_z = get_z_accel(I2C_2);
+	uprintf(UART0, "gyro_x: %5d, accel_y: %5d, accel_z: %5d\r\n", raw_gr_x, raw_xl_y, raw_xl_z);
+	timer_timeout_int_clr(TIMER32_4);
 }

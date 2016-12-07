@@ -1,4 +1,5 @@
 #include "pid.h"
+#include "tiva_c.h"
 
 uint8_t using_limits = 0;
 uint8_t using_dampening = 0;
@@ -13,8 +14,11 @@ float upper_damp, lower_damp;
 float upper_deadzone, lower_deadzone;
 float upper_int_range, lower_int_range;
 float integral = 0, derivative = 0, output = 0;
+float deadzone_scale = 0;
+int num = 0;
 
-float update(float sp, float pv) {
+float pid_update(float sp, float pv) {
+	float p_term, i_term, d_term;
 	// calculate error (proportional)
 	float error = sp - pv;
 	if (!is_initialized) {
@@ -35,16 +39,19 @@ float update(float sp, float pv) {
 	derivative = (error-error_old) / dt;
 	
 	// calculate output
-	output = Kp*error + Ki*integral + Kd*derivative;
+	p_term = Kp*error;
+	i_term = Ki*integral;
+	d_term = Kd*derivative;
+	output = p_term + i_term + d_term;
 	
 	// apply limits and deadzone
-	if (using_limits) {
-			 if (output > upper_limit) output = upper_limit;
-		else if (output < lower_limit) output = lower_limit;
+	if (using_deadzone) {
+		if (error < 0) output = lower_deadzone + output * deadzone_scale;
+		else output = upper_deadzone + output * deadzone_scale;
 	}
-	if (using_deadzone && error != 0) {
-		if (error < 0) output += lower_deadzone;
-		else output += upper_deadzone;	// constant offset
+	if (using_limits) {
+		if (output > upper_limit) output = upper_limit;
+		else if (output < lower_limit) output = lower_limit;
 	}
 	if (error == 0) output = 0;
 	
@@ -75,10 +82,31 @@ void set_deadzone(float low, float high) {
 	upper_deadzone = high;
 	lower_deadzone = low;
 	using_deadzone = 1;
+	deadzone_scale = 1.0f - high;
 }
 
 void set_integral_range(float low, float high) {
 	upper_int_range = high;
 	lower_int_range = low;
 	using_int_range = 1;
+}
+
+void reset_i_term(void) {
+	integral = 0;
+}
+
+float get_proportional(void) {
+	return Kp*error_old;
+}
+
+float get_integral(void) {
+	return Ki*integral;
+}
+
+float get_derivative(void) {
+	return Kd*derivative;
+}
+
+float get_output(void) {
+	return output;
 }

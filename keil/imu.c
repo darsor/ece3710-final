@@ -6,8 +6,11 @@ uint8_t gryo_address = 0x6B;
 void gyro_init(uint32_t* i2c, uint32_t clk_speed) {
 	uint8_t data[2];
 	i2c_init(i2c, clk_speed, I2C_400k);
-	data[0] = 0x20;						// CTRL_REG1
-	data[1] = 0x0F;						// 95 ODR 12.5 BW (same as Spark Fun)- PD off- z,x,y enable
+	data[0] = 0x23;				// CTRL_REG4
+	data[1] = 0x90;				// BDU and FS 500 dps
+	i2c_write(i2c, gryo_address, data, 2, 0);
+	data[0] = 0x20;				// CTRL_REG1
+	data[1] = 0x89;				// ODR 380 Hz, PD off, x axis enable
 	i2c_write(i2c, gryo_address, data, 2, 0);
 }
 
@@ -35,12 +38,12 @@ uint16_t get_gyro_2_byte_data(uint32_t* i2c, uint8_t address, uint8_t s_address)
 void accel_init(uint32_t* i2c, uint32_t clk_speed) {
 	uint8_t data[2];
 	i2c_init(i2c, clk_speed, I2C_400k);
-	data[0] =  0x20;
-	data[1] = 0x57;						// normal power mode, 400k Hz
-	i2c_write(i2c, accel_address, data, 2, 0);
 	
-	data[0] =  0x23;
-	data[1] = 0x08;						// high resolution (16 bit)
+	data[0] = 0x23;					// CTRL_REG4
+	data[1] = 0x88;					// BDU, High Resolution
+	i2c_write(i2c, accel_address, data, 2, 0);
+	data[0] = 0x20;					// CTRL_REG1
+	data[1] = 0x76;					// 400Hz ODR, YZ axes enabled
 	i2c_write(i2c, accel_address, data, 2, 0);
 	
 }
