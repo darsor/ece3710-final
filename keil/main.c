@@ -12,10 +12,13 @@
 uint32_t clk_speed = 40000000;
 //volatile float gr_angle = 0;
 volatile float angle = 0;
-volatile float PID[3] = {0.01,0,0};
 volatile float delta = .000001;
 volatile int inc = 0;
 volatile uint8_t which = 0; // increment p or i or d
+
+volatile float PID[3] = {0.08,0.2,0.01};
+volatile float trim = -1.40;
+volatile float deadzone = 0.21;
 
 int main(void) {	
 	sys_clock(CLK_MOSC, CLK_PLL_ON, 5);
@@ -31,7 +34,7 @@ int main(void) {
 	
 	initialize_pid(PID[0], PID[1], PID[2], 0.0025);
 	set_limits(-1.0, 1.0);
-	set_deadzone(-0.16, 0.16); // 0.22 is start on ground
+	set_deadzone(0-deadzone, deadzone); // 0.22 is start on ground
 	
 	timer_timeout_int_en(TIMER32_0);
 	timer_timeout_int_en(TIMER32_1);
@@ -47,7 +50,7 @@ int main(void) {
 }
 
 void TIMER0A_Handler(void) {
-	float xl_angle = 0;
+	float xl_angle;
     float dps, speed;
     int16_t raw_gr_x;
     int16_t raw_xl_y;
@@ -66,7 +69,7 @@ void TIMER0A_Handler(void) {
     //gr_angle += dps * 0.0025f;
     angle = 0.98f * (angle + dps*0.0025f) + 0.02f * xl_angle;
 	
-	speed = pid_update(0.0, angle);
+	speed = pid_update(0.0, angle+trim);
 	motor1_speed(speed);
 	motor2_speed(speed);
 	/*if (++inc > 200) { // verify that PID loop is fast enough
@@ -82,11 +85,11 @@ void TIMER1A_Handler(void) {
 	
 	state = get_nunchuck_state(I2C_1, 0x052);
 	
-	if(state.y_joystick > 0xD0) {
+	if(state.y_joystick > 0xD0 && !state.c) {
 		//increase number
 		PID[which] += delta;
 	}
-	else if(state.y_joystick < 0x20) {
+	else if(state.y_joystick < 0x20 && !state.c) {
 		//decrease number
 		if(PID[which]>0) PID[which] -= delta;
 		if(PID[which]<0) PID[which] = 0;
@@ -101,7 +104,19 @@ void TIMER1A_Handler(void) {
 		if (delta > 0.000001f) delta/=10;
 	}
 
-	if(state.z) {
+	if (state.z && state.c) {
+		if(state.y_joystick > 0xD0) {
+			//increase deadzone
+			deadzone += 0.005f;
+			set_deadzone(0-deadzone, deadzone);
+		}
+		else if(state.y_joystick < 0x20) {
+			//decrease deadzone
+			deadzone -= 0.005f;
+			set_deadzone(0-deadzone, deadzone);
+		}
+	}
+	else if(state.z) {
 		//change controller constant
 		which = (which+1)%3;
 		if(which==0) {
@@ -115,8 +130,7 @@ void TIMER1A_Handler(void) {
 			gpio_write(GPIO_F, 2, 1); //if D, then blue
 		}
 	}
-	
-	if (state.c) {
+	else if (state.c) {
 		reset_i_term();
 	}
 
@@ -125,5 +139,5 @@ void TIMER1A_Handler(void) {
 	i = get_integral();
 	d = get_derivative();
 	o = get_output();
-	uprintf(UART4, "angle = %08.3f       p: %06.3f, i: %06.3f, d: %06.3f, output: %06.3f       Kp = %09.6f, Ki = %09.6f Kd = %09.6f delta = %09.6f\r\n", angle, p, i, d, o, PID[0], PID[1], PID[2], delta);
+	uprintf(UART4, "angle = %08.3f       p: %06.3f, i: %06.3f, d: %06.3f, output: %06.3f       Kp = %09.6f, Ki = %09.6f Kd = %09.6f delta = %09.6f      deadzone: %6.3f\r\n", angle+trim, p, i, d, o, PID[0], PID[1], PID[2], delta, deadzone);
 }

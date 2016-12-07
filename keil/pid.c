@@ -16,6 +16,7 @@ float upper_int_range, lower_int_range;
 float integral = 0, derivative = 0, output = 0;
 float deadzone_scale = 0;
 int num = 0;
+int error_pos = 0; // 1 if error is positive, used for dampening
 
 float pid_update(float sp, float pv) {
 	float p_term, i_term, d_term;
@@ -24,6 +25,14 @@ float pid_update(float sp, float pv) {
 	if (!is_initialized) {
 		error_old = error;
 		is_initialized = 1;
+		if (error > 0) error_pos = 1;
+	}
+	if (using_dampening) {
+		if ((error > 0) != (error_pos == 1)) {
+			integral = 0;
+			if (error >= 0) error_pos = 1;
+			else error_pos = 0;
+		}
 	}
 	
 	// calculate integral
@@ -72,9 +81,9 @@ void set_limits(float lower, float upper) {
 	using_limits = 1;
 }
 
-void set_dampening(float low, float high) {
-	upper_damp = high;
-	lower_damp = low;
+void set_dampening(void) {
+	//upper_damp = high;
+	//lower_damp = low;
 	using_dampening = 1;
 }
 

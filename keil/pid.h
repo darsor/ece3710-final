@@ -22,7 +22,7 @@ extern float integral, derivative, output;
 float pid_update(float sp, float pv);
 void initialize_pid(float p, float i, float d, float dt);
 void set_limits(float lower, float upper);			// output will not surpass these limits
-void set_dampening(float low, float high);         	// integral term will be damped in this range
+void set_dampening(void);         						// integral term will be damped when it crosses sp
 void set_deadzone(float low, float high);          	// the "zero" value at which the system responds
 void set_integral_range(float low, float high);     // the integral term will not build up outside of this range
 void reset_i_term(void);
