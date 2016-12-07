@@ -121,3 +121,36 @@ void TIMER4A_Handler(void) {
 	uprintf(UART0, "gyro_x: %5d, accel_y: %5d, accel_z: %5d\r\n", raw_gr_x, raw_xl_y, raw_xl_z);
 	timer_timeout_int_clr(TIMER32_4);
 }
+
+void test_motor_freq(uint32_t clk_speed) {
+	uint32_t freq1 = 2000, freq2 = 2000;
+	float speed = 0;
+	struct nunchuck_state state;
+	
+	uart_init(UART4, 115200, clk_speed);
+	nunchuck_init(I2C_1, clk_speed);
+	motors_init(clk_speed, 2000);
+	
+	while(1) {
+		state = get_nunchuck_state(I2C_1, 0x052);
+		if(state.x_joystick < 0x20 && state.z) {
+			freq1 += 100;
+			if (freq1 > 2000) {
+				freq1 = 100;
+			}
+		}
+		else if(state.x_joystick > 0xD0 && state.z) {
+			freq2 += 100;
+			if (freq2 > 2000) {
+				freq2 = 100;
+			}
+		}
+		speed = (state.y_joystick/128.0 - 1);
+		motor1_speed(speed);
+		motor2_speed(speed);
+		motor1_freq(clk_speed, freq1);
+		motor2_freq(clk_speed, freq2);
+		uprintf(UART4, "motor1: %5u Hz        motor2: %5u Hz\r\n", freq1, freq2);
+		msleep(1250); // half second
+	}
+}
