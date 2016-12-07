@@ -50,7 +50,7 @@ void test_nunchuck(uint32_t clk_speed)
 {
 	float speed = 0;
 	struct nunchuck_state state;
-	motors_init(clk_speed, 20000);
+	motors_init(clk_speed, 500);
 	nunchuck_init(I2C_1, clk_speed);
 	uart_init(UART4, 115200, clk_speed);
 		
@@ -61,6 +61,7 @@ void test_nunchuck(uint32_t clk_speed)
 		motor1_speed(speed);
 		motor2_speed(speed);
 		uprintf(UART4, "speed: %f\r\n", speed);
+		msleep(25);
 	}
 }		
 

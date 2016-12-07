@@ -27,11 +27,11 @@ int main(void) {
 	timer_init(TIMER32_1, clk_speed/4, TIMER_PERIODIC);
     gpio_init(GPIO_F, 0x0E, GPIO_OUT, GPIO_DEN);
     nunchuck_init(I2C_1, clk_speed);
-	motors_init(clk_speed, 20000);
+	motors_init(clk_speed, 500);
 	
 	initialize_pid(PID[0], PID[1], PID[2], 0.0025);
 	set_limits(-1.0, 1.0);
-	set_deadzone(-0.54, 0.54);
+	set_deadzone(-0.16, 0.16); // 0.22 is start on ground
 	
 	timer_timeout_int_en(TIMER32_0);
 	timer_timeout_int_en(TIMER32_1);
@@ -80,7 +80,7 @@ void TIMER1A_Handler(void) {
 	float p, i, d, o;
 	timer_timeout_int_clr(TIMER32_1);
 	
-	state = get_nunchuck_state(I2C_1,0x052);
+	state = get_nunchuck_state(I2C_1, 0x052);
 	
 	if(state.y_joystick > 0xD0) {
 		//increase number
