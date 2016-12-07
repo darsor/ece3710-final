@@ -27,8 +27,9 @@ int main(void) {
 	gyro_init(I2C_2, clk_speed);
 	accel_init(I2C_2, clk_speed);
 	timer_init(TIMER32_0, clk_speed/400, TIMER_PERIODIC);
-	timer_init(TIMER32_1, clk_speed/4, TIMER_PERIODIC);
+	timer_init(TIMER32_1, clk_speed/4,   TIMER_PERIODIC);
     gpio_init(GPIO_F, 0x0E, GPIO_OUT, GPIO_DEN);
+	gpio_init(GPIO_F, 0x01, GPIO_IN,  GPIO_DEN | GPIO_PUR);
     nunchuck_init(I2C_1, clk_speed);
 	motors_init(clk_speed, 500);
 	
@@ -40,6 +41,7 @@ int main(void) {
 	timer_timeout_int_en(TIMER32_1);
 	nvic_int_en(19);
 	nvic_int_en(21);
+	nvic_set_pri(19, 0);
 	nvic_set_pri(21, 7);
 	timer_start(TIMER32_0);
 	timer_start(TIMER32_1);
@@ -79,11 +81,22 @@ void TIMER0A_Handler(void) {
 }
 
 void TIMER1A_Handler(void) {
-	struct nunchuck_state state; 
+	struct nunchuck_state state;
 	float p, i, d, o;
-	timer_timeout_int_clr(TIMER32_1);
 	
 	state = get_nunchuck_state(I2C_1, 0x052);
+	
+	if (!gpio_read(GPIO_F, 0)) {
+		reset_i_term();
+	}
+	
+	// if the nunchuck is not connected
+	if (state.y_joystick == 0xFF && state.x_joystick == 0xFF) {
+		// try to connect again
+		nunchuck_init(I2C_1, clk_speed);
+		// return before modifying anything
+		return;
+	}
 	
 	if(state.y_joystick > 0xD0 && !state.c) {
 		//increase number
@@ -134,10 +147,14 @@ void TIMER1A_Handler(void) {
 		reset_i_term();
 	}
 
+	// set new constants
 	initialize_pid(PID[0], PID[1], PID[2], 0.01);
+	
+	// print debug information and PID constants
 	p = get_proportional();
 	i = get_integral();
 	d = get_derivative();
 	o = get_output();
 	uprintf(UART4, "angle = %08.3f       p: %06.3f, i: %06.3f, d: %06.3f, output: %06.3f       Kp = %09.6f, Ki = %09.6f Kd = %09.6f delta = %09.6f      deadzone: %6.3f\r\n", angle+trim, p, i, d, o, PID[0], PID[1], PID[2], delta, deadzone);
+	timer_timeout_int_clr(TIMER32_1);
 }
