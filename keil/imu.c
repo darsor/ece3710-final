@@ -62,7 +62,6 @@ int16_t get_y_accel(uint32_t* i2c) {
 int16_t get_z_accel(uint32_t* i2c) {
 	uint8_t s_address = 0xAC;			// x_accell address +8 for continuous read
 	return get_accel_2_byte_data(i2c, accel_address, s_address);
-
 }
 
 uint16_t get_accel_2_byte_data(uint32_t* i2c, uint8_t address, uint8_t s_address) {

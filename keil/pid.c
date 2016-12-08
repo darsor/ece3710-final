@@ -62,7 +62,6 @@ float pid_update(float sp, float pv) {
 		if (output > upper_limit) output = upper_limit;
 		else if (output < lower_limit) output = lower_limit;
 	}
-	if (error == 0) output = 0;
 	
 	error_old = error;
 	return output;
