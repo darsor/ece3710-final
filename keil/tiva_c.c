@@ -351,6 +351,10 @@ void timer_init(uint32_t* timer, uint32_t reload, uint8_t mode) {
 	timer[0x028/4] = reload;			// set reload value
 }
 
+void timer_set_value(uint32_t* timer, uint32_t value) {
+	timer[0x028/4] = value;
+}
+
 uint32_t timer_value(uint32_t* timer) {
 	return timer[0x050/4];
 }
