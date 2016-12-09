@@ -63,7 +63,18 @@ void test_nunchuck(uint32_t clk_speed)
 		uprintf(UART4, "speed: %f\r\n", speed);
 		msleep(25);
 	}
-}		
+}
+
+void test_nunchuck_tilt(uint32_t clk_speed){
+	struct nunchuck_state state;
+	nunchuck_init(I2C_1, clk_speed);
+	uart_init(UART0, 115200, clk_speed);
+		
+	while(1) {
+		state = get_nunchuck_state(I2C_1, 0x052); // test nunchuck
+		uprintf(UART0, "x axis: %d y axis: %d z axis: %d\r\n", state.x_tilt, state.y_tilt, state.z_tilt);
+	}
+}
 
 void test_accel(uint32_t* i2c, uint32_t clk_speed)
 {
@@ -155,3 +166,5 @@ void test_motor_freq(uint32_t clk_speed) {
 		msleep(1250); // half second
 	}
 }
+
+

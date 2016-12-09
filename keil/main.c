@@ -5,6 +5,7 @@
 #include "pid.h"
 #include "test.h"
 #include <math.h>
+#include "notes.h"
 
 #define RAD_TO_DEG 57.29578
 #define GYRO_TO_DPS 0.0172813 // (500.0 / 32767.0) * 1.132512
@@ -15,6 +16,9 @@ volatile float angle = 0;
 volatile float delta = .000001;
 volatile int inc = 0;
 volatile uint8_t which = 0; // increment p or i or d
+volatile uint8_t enabled = 0;
+volatile uint8_t bounce = 0;
+volatile uint8_t note_index = 0;
 
 volatile float motor_offset = 0;
 volatile float set_point = 0;
@@ -33,10 +37,13 @@ int main(void) {
 	uart_init(UART4, 115200, clk_speed);
 	gyro_init(I2C_2, clk_speed);
 	accel_init(I2C_2, clk_speed);
-	timer_init(TIMER32_0, clk_speed*pid_dt, TIMER_PERIODIC);
-	timer_init(TIMER32_1, clk_speed/30,   TIMER_PERIODIC);
+	timer_init(TIMER32_0, clk_speed*pid_dt, TIMER_PERIODIC);	// PID
+	timer_init(TIMER32_1, clk_speed/30,   TIMER_PERIODIC);		// nunchuck
+	timer_init(TIMER32_2, clk_speed/10,   TIMER_PERIODIC);		// start button
+	timer_init(TIMER32_3, clk_speed/1, TIMER_ONESHOT);			// mario
+
 	gpio_init(GPIO_F, 0x0E, GPIO_OUT, GPIO_DEN);
-	gpio_init(GPIO_F, 0x01, GPIO_IN,  GPIO_DEN | GPIO_PUR);
+	gpio_init(GPIO_F, 0x11, GPIO_IN,  GPIO_DEN | GPIO_PUR);
 	nunchuck_init(I2C_1, clk_speed);
 	motors_init(clk_speed, 500);
 	
@@ -46,16 +53,66 @@ int main(void) {
 	
 	timer_timeout_int_en(TIMER32_0);
 	timer_timeout_int_en(TIMER32_1);
+	timer_timeout_int_en(TIMER32_2);
+	timer_timeout_int_en(TIMER32_3);
+
 	nvic_int_en(19);
 	nvic_int_en(21);
-	nvic_set_pri(19, 0);
-	nvic_set_pri(21, 7);
-	timer_start(TIMER32_0);
-	timer_start(TIMER32_1);
+	nvic_int_en(23);
+	nvic_int_en(35);
 	
+	nvic_set_pri(19, 0);
+	nvic_set_pri(21, 2);
+	nvic_set_pri(23, 1);
+	nvic_set_pri(35, 3);
+
+	timer_start(TIMER32_2);
+	timer_start(TIMER32_3);
+
 	gpio_write(GPIO_F, 1, 1);
 	
 	while(1);
+}
+
+void TIMER3A_Handler(void) {
+	uint32_t note_length;
+	note_length = 1.2f/(tempo[note_index]) * clk_speed;
+	timer_set_value(TIMER32_3, note_length);
+	motor1_freq(clk_speed, notes[note_index]);
+	motor2_freq(clk_speed, notes[note_index++]);
+	motor1_speed(0.15);
+	motor2_speed(0.15);
+	timer_start(TIMER32_3);
+	if (note_index >= 164) note_index = 0;
+	timer_timeout_int_clr(TIMER32_3);
+}
+
+void TIMER2A_Handler(void) {
+	if (!gpio_read(GPIO_F,4) && !bounce) {	// check if start/stop button is pressed
+		enabled = !enabled;		
+		if (enabled) {
+			timer_stop(TIMER32_3);
+			motor1_speed(0);
+			motor2_speed(0);
+			motor1_freq(clk_speed, 500);
+			motor2_freq(clk_speed, 500);
+			timer_start(TIMER32_0);
+			timer_start(TIMER32_1);
+
+		} else {
+			timer_stop(TIMER32_0);
+			timer_stop(TIMER32_1);
+			timer_start(TIMER32_3);
+			motor1_speed(0);
+			motor2_speed(0);
+			reset_i_term();
+		}
+		bounce = 1;
+	} 
+	else if (gpio_read(GPIO_F,4)) {
+		bounce = 0;
+	}
+	timer_timeout_int_clr(TIMER32_2);
 }
 
 void TIMER0A_Handler(void) {
@@ -111,35 +168,45 @@ void TIMER1A_Handler(void) {
 
 void control_robot(struct nunchuck_state state) {
 	float p, i, d, o;
-	
-	// 0x76 to 8A deadzone
-	if(state.x_joystick > 0x8A) {
-		motor_offset = (state.x_joystick - 0x8A) * 0.0025641; // (0.3 / 117)
-	}
-	else if(state.x_joystick < 0x76) {
-		motor_offset = ((int8_t)state.x_joystick - 0x76) * 0.0025641;
+	if (!state.z) {
+		// 0x76 to 8A deadzone
+		if(state.x_joystick > 0x8A) {
+			motor_offset = (state.x_joystick - 0x8A) * 0.0025641; // (0.3 / 117)
+		}
+		else if(state.x_joystick < 0x76) {
+			motor_offset = ((int8_t)state.x_joystick - 0x76) * 0.0025641;
+		}
+		else {
+			motor_offset = 0;
+		}
+		// 0x76 to 8A deadzone
+		if(state.y_joystick > 0x8A) {
+			set_point = (state.y_joystick - 0x8A) * -0.008547; // (1 / 117)
+		}
+		else if(state.y_joystick < 0x76) {
+			
+			set_point = ((int8_t)state.y_joystick - 0x76) * -0.008547;
+		}
+		else {
+			set_point = 0;
+		}
 	}
 	else {
-		motor_offset = 0;
-	}
-	// 0x76 to 8A deadzone
-	if(state.y_joystick > 0x8A) {
-		set_point = (state.y_joystick - 0x8A) * -0.008547; // (1 / 117)
-	}
-	else if(state.y_joystick < 0x76) {
+		motor_offset = ((int16_t)state.x_tilt - 512) * 0.0013636;	// (0.3 / 220)
+		if (motor_offset > 0.3f) motor_offset = 0.3;
+		else if (motor_offset < -0.3f) motor_offset = -0.3;
 		
-		set_point = ((int8_t)state.y_joystick - 0x76) * -0.008547;
+		set_point = ((int16_t)state.y_tilt - 512) * -0.00434783; // (1 / 230)		
+		if (set_point > 1) set_point = 1;
+		else if (set_point < -1) set_point = -1;
 	}
-	else {
-		set_point = 0;
-	}
+	
 	//uprintf(UART4, "\r\n", motor1_offset);
 	p = get_proportional();
 	i = get_integral();
 	d = get_derivative();
 	o = get_output();
 	uprintf(UART4, "motor offset: %7.4f     angle = %08.3f       p: %06.3f, i: %06.3f, d: %06.3f, output: %06.3f\r\n", motor_offset, angle+trim, p, i, d, o);
-
 }
 
 void tune_PID(struct nunchuck_state state) {
